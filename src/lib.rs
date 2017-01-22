@@ -109,6 +109,9 @@ impl<T> TLType for Vec<T> where T: TLType {
     }
 }
 
+include!(concat!(env!("OUT_DIR"), "/constructors.rs"));
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -158,5 +161,46 @@ mod tests {
         cur.set_position(0);
         let ss  = String::deserialize(&mut cur).unwrap();
         assert_eq!(s,ss);
+    }
+    #[test]
+    fn test_upload_file() {
+        let f = upload::File::File {
+            bytes: vec![1,2,3,4,5],
+            kind: storage::FileType::FileGif{},
+            mtime: -100
+        };
+        let mut cur = Cursor::new(Vec::new());
+        f.serialize(&mut cur).unwrap();
+        cur.set_position(0);
+        let ff  = upload::File::deserialize(&mut cur).unwrap();
+        assert_eq!(f,ff);
+    }
+    #[test]
+    fn test_wallpaper() {
+        let w = WallPaper::WallPaper {
+            sizes: vec![
+                PhotoSize::PhotoSizeEmpty {kind: "empty".into()},
+                PhotoSize::PhotoCachedSize {
+                    w:10,
+                    h:100,
+                    kind: "cached".into(),
+                    location: FileLocation::FileLocation {
+                        local_id: 1,
+                        dc_id:2,
+                        secret: 10000000000,
+                        volume_id: -1
+                    },
+                    bytes: vec![1,2,3,4]
+                }
+            ],
+            title: "title".into(),
+            color: 10,
+            id: -133
+        };
+        let mut cur = Cursor::new(Vec::new());
+        w.serialize(&mut cur).unwrap();
+        cur.set_position(0);
+        let ww  = WallPaper::deserialize(&mut cur).unwrap();
+        assert_eq!(w,ww);
     }
 }
